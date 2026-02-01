@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nats-bootstrap"
-version = "0.1.0"
+version = "0.0.9"
 description = "Super simple CLI to bootstrap and manage NATS clusters."
 readme = "README.md"
 requires-python = ">=3.10"
