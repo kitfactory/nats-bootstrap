@@ -1,0 +1,75 @@
+﻿# plan.md
+
+# current
+
+# future
+
+# archive
+- [x] bootstrap 追加オプションの仕様追記（--listen/--cluster-port/--client-port/--http-port、seedの既定ポート）
+- [x] 自動設定生成にポート/リッスンの反映を実装
+- [x] README/マニュアルに seedの既定ポートと追加オプションを追記
+- [x] テスト追加（listen/port）と pytest 実行
+- [x] 自己レビュー → ユーザー確認（bootstrap拡張）
+- [x] bootstrap モード仕様を spec に追記（--cluster/--seed/--datafolder/保存先）
+- [x] 自動設定生成の実装（datafolder/設定保存/seed正規化）
+- [x] up/join に bootstrap モードを組み込み（排他/必須チェック）
+- [x] .gitignore 更新（自動生成データ/設定）
+- [x] README/マニュアルを bootstrap 手順に更新
+- [x] テスト追加（bootstrap config/引数チェック）
+- [x] 自己レビュー → ユーザー確認（bootstrap）
+- [x] backup/restore の仕様を spec に追記（MVP範囲/制約）
+- [x] backup のI/F設計（対象/出力/オプション）
+- [x] restore のI/F設計（入力/上書き/安全側）
+- [x] nats CLI の利用方法を整理（前提/認証/接続）
+- [x] backup 実装（nats CLI export の最小版）
+- [x] restore 実装（nats CLI import の最小版）
+- [x] doctor に backup/restore 事前条件の簡易チェック追加
+- [x] テスト（CLI引数/エラー/スタブ）
+- [x] 自己レビュー → ユーザー確認（backup/restore）
+- [x] 初期ディレクトリ作成
+- [x] docs/OVERVIEW.md を更新し現在地を明確化する
+- [x] concept/spec/plan を最新化する
+- [x] パッケージ骨組み（src構成、CLIエントリ）を作成する
+- [x] resolve_binary（5段階順・絶対パス・バージョン取得）を実装する
+- [x] status/doctor を実装する
+- [x] start の互換警告と up への委譲を実装する
+- [x] README を最小整備する
+- [x] 自己レビュー → ユーザー確認
+- [x] controller 仕様を spec に追記（I/F・エンドポイント・request_id）
+- [x] controller 設計メモを docs に追記（依存/保存先/冪等）
+- [x] controller CLI `controller start` の引数設計
+- [x] controller サーバ実装（起動/終了・基本ルーティング）
+- [x] request_id の冪等処理（保存・重複判定）
+- [x] leave 側の controller 呼び出し実装（複数エンドポイント対応）
+- [x] controller 不達時の挙動（安全デフォルト/--stop-anyway）
+- [x] doctor に controller 疎通の簡易チェック追加
+- [x] テスト（request_id/エンドポイント/CLI）
+- [x] 自己レビュー → ユーザー確認（controller）
+- [x] down の安全実装方針を spec に追記（停止のみ/副作用なし）
+- [x] leave の安全実装方針を spec に追記（controller必須/stop-anyway）
+- [x] down のI/F設計（対象プロセス/サービスの特定方針）
+- [x] leave のI/F設計（必要引数/確認フロー）
+- [x] down 実装（PID/サービス停止の最小版）
+- [x] leave 実装（controller完了後の停止動作）
+- [x] 破壊的操作の確認メッセージ/明示フラグ設計
+- [x] doctor に stop 対象の検知結果を追加
+- [x] テスト（down/leaveの安全挙動）
+- [x] 自己レビュー → ユーザー確認（down/leave）
+- [x] テスト方針（resolve_binary/CLI）を spec/plan に追記
+- [x] resolve_binary の優先順テスト（CLI/ENV/CONFIG/PATH）
+- [x] config 読み込みのバリデーションテスト（未知キー/型）
+- [x] doctor 出力の包含テスト（優先順/試行履歴/pid-file）
+- [x] CLI の引数位置テスト（--config/--nats-server-path 前後）
+- [x] leave/down の confirm エラーテスト（回帰）
+- [x] テスト実行手順の明文化（README/plan）
+- [x] 自己レビュー → ユーザー確認（tests）
+- [x] Windowsサービス設計方針を spec に追記（固定パス/副作用なし）
+- [x] service install/uninstall のI/F設計（引数/挙動）
+- [x] 固定パス配置の仕様（コピー先/上書き条件）
+- [x] Windowsサービス install 実装（最小版）
+- [x] Windowsサービス uninstall 実装（最小版）
+- [x] up --service の動作定義/実装（未インストール時エラー）
+- [x] doctor にサービス状態の簡易チェック追加
+- [x] テスト（install/uninstall/CLIの安全挙動）
+- [x] 自己レビュー → ユーザー確認（service）
+- [x] Windowsサービスの管理者権限テスト（install/uninstall/up/doctor）

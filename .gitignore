@@ -1,0 +1,9 @@
+nats-config.json
+nats-bootstrap-data/
+nats.exe
+.venv/
+.uv-cache/
+.pytest_cache/
+__pycache__/
+*.pyc
+*.egg-info/
