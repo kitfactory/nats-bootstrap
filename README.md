@@ -6,7 +6,7 @@ Start one node, add others with `--seed`, and use the same commands on every mac
 A CLI/library to run NATS (JetStream/KV) clusters with **the same commands everywhere**.
 The real value is **Day‑2 ops** (join/leave/backup/restore/service) made safe and repeatable.
 
-日本語 README: `README_ja.md`
+Docs: [日本語 README](README_ja.md) | [Detailed manual](manuals/manual_en.md) | [日本語マニュアル](manuals/manual_ja.md) | [NATS CLI install](docs/nats_cli_install.md)
 
 ---
 
@@ -27,7 +27,7 @@ uv pip install "nats-bootstrap[server]"
 ```
 
 Note: `nats` CLI is required for backup/restore.
-Install guide: `docs/nats_cli_install.md`
+Install guide: [docs/nats_cli_install.md](docs/nats_cli_install.md)
 Note: `nats.exe` (CLI) is **not** the server. The server binary is `nats-server.exe`.
 
 ## Config types
@@ -139,5 +139,6 @@ pytest -q
 ```
 
 ## Manuals
-- Japanese: `manuals/manual_ja.md`
-- English: `manuals/manual_en.md`
+- [English detailed manual](manuals/manual_en.md)
+- [日本語詳細マニュアル](manuals/manual_ja.md)
+- [日本語 README](README_ja.md)

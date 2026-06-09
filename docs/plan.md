@@ -5,6 +5,7 @@
 # future
 
 # archive
+- [x] README/マニュアル間の相互リンクと NATS CLI インストール導線を整理
 - [x] bootstrap YAML の仕様追記（設定種別、既知キー、account/advertise）
 - [x] `--bootstrap-config` のCLI実装（既存 `--cluster` との排他/生成統合）
 - [x] bootstrap YAML ローダーと検証を追加（PyYAML依存、未知キー拒否）

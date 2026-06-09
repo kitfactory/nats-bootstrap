@@ -1,5 +1,7 @@
 ﻿# nats-bootstrap Detailed Manual 🇺🇸
 
+Docs: [English README](../README.md) | [日本語 README](../README_ja.md) | [日本語マニュアル](manual_ja.md) | [NATS CLI install](../docs/nats_cli_install.md)
+
 A friendly, emoji-filled guide. Let’s make ops fun! 🎉
 This manual walks through **one concrete clustering scenario**, plus **backup** and **Windows service** setup in detail.
 
@@ -19,7 +21,7 @@ This manual walks through **one concrete clustering scenario**, plus **backup** 
 2. nats-bootstrap
 3. `nats-server`
 4. `nats` CLI (required for backup/restore)
-   Install guide: `docs/nats_cli_install.md`
+   Install guide: [docs/nats_cli_install.md](../docs/nats_cli_install.md)
    Note: `nats.exe` (CLI) is not the server. The server binary is `nats-server.exe`.
 5. Admin privileges for Windows service operations
 
@@ -183,3 +185,5 @@ nats-bootstrap restore --input C:\nats\backup --confirm
 ## Wrap-up 🎯
 Cluster setup, services, and backups are **simple and consistent** with nats-bootstrap.
 Have fun running NATS the safe way! 🚀
+
+Back to: [English README](../README.md) | [日本語 README](../README_ja.md) | [日本語マニュアル](manual_ja.md)

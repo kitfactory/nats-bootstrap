@@ -1,5 +1,7 @@
 ﻿# nats-bootstrap 詳細マニュアル 🇯🇵
 
+ドキュメント: [日本語 README](../README_ja.md) | [English README](../README.md) | [English manual](manual_en.md) | [NATS CLIインストール](../docs/nats_cli_install.md)
+
 **やさしく・楽しく**説明します！🎉
 NATSクラスタの構築から、バックアップ、Windowsサービス化まで、**「簡単にできる」**ことを体験できる内容です。
 
@@ -19,7 +21,7 @@ NATSクラスタの構築から、バックアップ、Windowsサービス化ま
 2. nats-bootstrap
 3. NATSサーバ（`nats-server`）
 4. NATS CLI（`nats`）※backup/restore必須
-   インストール方法: `docs/nats_cli_install.md`
+   インストール方法: [docs/nats_cli_install.md](../docs/nats_cli_install.md)
    ※ `nats.exe`（CLI）はサーバーではありません。サーバーは `nats-server.exe` です。
 5. Windowsサービス操作は管理者権限
 
@@ -202,4 +204,6 @@ nats-bootstrap restore --input C:\nats\backup --confirm
 全部 **同じ感覚で簡単に**できるのが nats-bootstrap です！
 
 次はあなたの環境で試してみましょう 🚀
+
+戻る: [日本語 README](../README_ja.md) | [English README](../README.md) | [English manual](manual_en.md)
 

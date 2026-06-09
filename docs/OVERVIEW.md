@@ -53,3 +53,4 @@
 - 2026-01-30: マニュアルのFAQに `nats.exe` と `nats-server.exe` の違いを追記。
 - 2026-06-09: bootstrap YAML（--bootstrap-config）入力、account/advertise 生成、設定種別の説明を追加。
 - 2026-06-09: パッケージバージョンを `0.1.0` に更新。
+- 2026-06-09: README/マニュアル間の相互リンクと NATS CLI インストール導線を整理。
