@@ -5,6 +5,7 @@
 # future
 
 # archive
+- [x] NATS CLI インストールガイドを英語版/日本語版に分離し相互リンクを追加
 - [x] README/マニュアル間の相互リンクと NATS CLI インストール導線を整理
 - [x] bootstrap YAML の仕様追記（設定種別、既知キー、account/advertise）
 - [x] `--bootstrap-config` のCLI実装（既存 `--cluster` との排他/生成統合）

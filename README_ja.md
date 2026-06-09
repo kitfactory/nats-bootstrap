@@ -6,7 +6,7 @@
 NATS（JetStream/KV）クラスタを**どの端末でも同じコマンドで作れる**CLI/ライブラリです。
 「起動する」よりも**Day-2運用（join/leave/backup/restore/サービス化）を型にする**ことに価値があります。
 
-ドキュメント: [English README](README.md) | [日本語詳細マニュアル](manuals/manual_ja.md) | [English manual](manuals/manual_en.md) | [NATS CLIインストール](docs/nats_cli_install.md)
+ドキュメント: [English README](README.md) | [日本語詳細マニュアル](manuals/manual_ja.md) | [English manual](manuals/manual_en.md) | [NATS CLIインストール](docs/nats_cli_install_ja.md)
 
 ---
 
@@ -27,7 +27,7 @@ uv pip install "nats-bootstrap[server]"
 ```
 
 ※ backup/restore には `nats` CLI が必要です。
-インストール方法: [docs/nats_cli_install.md](docs/nats_cli_install.md)
+インストール方法: [docs/nats_cli_install_ja.md](docs/nats_cli_install_ja.md)
 ※ `nats.exe`（CLI）はサーバーではありません。サーバーは `nats-server.exe` です。
 
 ## 設定の種類
