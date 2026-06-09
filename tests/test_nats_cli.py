@@ -23,6 +23,8 @@ def test_resolve_cli_uses_env(tmp_path):
     assert resolved.source == "env"
 
 
-def test_resolve_cli_not_found():
+def test_resolve_cli_not_found(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("PATH", "")
     with pytest.raises(NatsCliNotFoundError):
         resolve_nats_cli(None, {})

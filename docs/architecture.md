@@ -31,6 +31,13 @@ CLI (Presentation)
 - 役割: sys.creds を保持し、leave の peer-remove を代行
 - HTTPサーバとして起動し、`/v1/leave` を提供
 
+### 3.4 Bootstrap YAML
+- 役割: `nats-bootstrap` 用の入力設定を読み込み、NATS server 設定ファイルを生成する
+- 入力: `cluster` / `datafolder` / `client_port` / `http_port` / `cluster_port` / `system_account` / `app_account` / `advertise`
+- 出力: `<datafolder>/nats-bootstrap.conf`
+- 制約: 既知キーのみ許可し、未知キーは拒否する
+- 依存方向: CLI -> YAML Loader -> Domain（Bootstrap生成ルール） -> Infra（ファイルI/O）
+
 ## 4. Controller 設計メモ（MVP）
 ### 4.1 I/F
 - 起動: `controller start --listen <host:port> --nats-url <url> --sys-creds <path> [--state-dir <path>]`

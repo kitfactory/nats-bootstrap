@@ -27,6 +27,7 @@ from .bootstrap_config import (
     generate_bootstrap_config,
     resolve_data_dir,
 )
+from .bootstrap_yaml import BootstrapYamlError, load_bootstrap_yaml
 from .resolve import BinaryNotFoundError, resolve_binary_with_attempts
 from .service_windows import (
     DEFAULT_SERVICE_NAME,
@@ -53,9 +54,13 @@ MSG_SVC_UNSUPPORTED = "service is only supported on Windows"
 MSG_SVC_EXISTS = "service already exists"
 MSG_SVC_NOT_FOUND = "service not found"
 MSG_BOOTSTRAP_CONFLICT = "--cluster cannot be used with --nats-config"
-MSG_BOOTSTRAP_SEED_REQUIRED = "--seed is required for join when --cluster is used"
+MSG_BOOTSTRAP_SEED_REQUIRED = "--seed is required for join when bootstrap mode is used"
 MSG_BOOTSTRAP_DATAFOLDER_INVALID = "--datafolder must be a directory"
 MSG_BOOTSTRAP_CLUSTER_REQUIRED = "--cluster must not be empty"
+MSG_BOOTSTRAP_YAML_CONFLICT = (
+    "--bootstrap-config cannot be used with --nats-config or manual bootstrap options"
+)
+MSG_BOOTSTRAP_YAML_INVALID = "bootstrap config is invalid"
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -106,6 +111,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="service name",
     )
     up_parser.add_argument("--cluster", help="cluster name (bootstrap mode)")
+    up_parser.add_argument("--bootstrap-config", help="path to bootstrap.yaml")
     up_parser.add_argument("--cluster-port", type=int, help="cluster port (bootstrap mode)")
     up_parser.add_argument("--client-port", type=int, help="client port (bootstrap mode)")
     up_parser.add_argument("--http-port", type=int, help="http port (bootstrap mode)")
@@ -122,6 +128,7 @@ def build_parser() -> argparse.ArgumentParser:
     join_parser = subparsers.add_parser("join", help="alias of up", parents=[common])
     join_parser.add_argument("--seed", help="seed host[:port] for join (bootstrap mode)")
     join_parser.add_argument("--cluster", help="cluster name (bootstrap mode)")
+    join_parser.add_argument("--bootstrap-config", help="path to bootstrap.yaml")
     join_parser.add_argument("--cluster-port", type=int, help="cluster port (bootstrap mode)")
     join_parser.add_argument("--client-port", type=int, help="client port (bootstrap mode)")
     join_parser.add_argument("--http-port", type=int, help="http port (bootstrap mode)")
@@ -493,6 +500,35 @@ def handle_join(resolved, args: argparse.Namespace) -> int:
 
 
 def _resolve_bootstrap_config(args: argparse.Namespace) -> tuple[str | None, int]:
+    bootstrap_config = getattr(args, "bootstrap_config", None)
+    if bootstrap_config:
+        if args.nats_config or _has_manual_bootstrap_options(args):
+            print(MSG_BOOTSTRAP_YAML_CONFLICT, file=sys.stderr)
+            return None, 2
+
+        if args.command == "join" and not args.seed:
+            print(MSG_BOOTSTRAP_SEED_REQUIRED, file=sys.stderr)
+            return None, 2
+
+        try:
+            yaml_config = load_bootstrap_yaml(Path(bootstrap_config).expanduser().resolve())
+            generated = generate_bootstrap_config(
+                yaml_config.cluster,
+                yaml_config.data_dir,
+                args.seed,
+                client_port=yaml_config.client_port,
+                http_port=yaml_config.http_port,
+                cluster_port=yaml_config.cluster_port,
+                system_account=yaml_config.system_account,
+                app_account=yaml_config.app_account,
+                advertise=yaml_config.advertise,
+            )
+        except (BootstrapConfigError, BootstrapYamlError) as exc:
+            print(f"{MSG_BOOTSTRAP_YAML_INVALID}: {exc}", file=sys.stderr)
+            return None, 2
+
+        return str(generated.path), 0
+
     if not getattr(args, "cluster", None):
         return args.nats_config, 0
 
@@ -525,6 +561,11 @@ def _resolve_bootstrap_config(args: argparse.Namespace) -> tuple[str | None, int
         return None, 2
 
     return str(generated.path), 0
+
+
+def _has_manual_bootstrap_options(args: argparse.Namespace) -> bool:
+    option_names = ("cluster", "datafolder", "client_port", "http_port", "cluster_port", "listen")
+    return any(getattr(args, name, None) is not None for name in option_names)
 
 
 def run_nats_server(binary: Path, nats_config: str | None, extra_args: list[str]) -> int:

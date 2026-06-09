@@ -14,7 +14,7 @@ English README: `README.md`
 - **同じコマンド**で、どの端末でもクラスタを作れます。
 - `status` / `doctor` で「今の事実」がすぐ見えます。
 - Windowsサービス化で、venv更新による破壊を防げます（固定パス運用）。
-- **bootstrap モード**: `--cluster` + `--seed` で、設定ファイル不要のクラスタ構築。
+- **bootstrap モード**: `--cluster` または `bootstrap.yaml` で、設定ファイルを自動生成。
 
 ## インストール
 ```powershell
@@ -30,7 +30,17 @@ uv pip install "nats-bootstrap[server]"
 インストール方法: `docs/nats_cli_install.md`
 ※ `nats.exe`（CLI）はサーバーではありません。サーバーは `nats-server.exe` です。
 
-## 設定ファイル（優先順）
+## 設定の種類
+| ファイル/指定 | 読むもの | 役割 |
+|---|---|---|
+| `nats-config.json` / `--config` | `nats-bootstrap` | ツール自身の設定（例: `nats_server_path`） |
+| `bootstrap.yaml` / `--bootstrap-config` | `nats-bootstrap` | NATS設定を生成するための入力 |
+| `<datafolder>\nats-bootstrap.conf` | `nats-server` | 自動生成されたNATSの生設定 |
+| `--nats-config <path>` | `nats-server` | 自分で用意したNATSの生設定 |
+
+`nats-config.json` と `bootstrap.yaml` は NATS の生設定ではありません。
+
+## nats-bootstrap 設定ファイル（優先順）
 1. `--config` で指定されたファイル（最優先）
 2. 実行ディレクトリの `nats-config.json`
 3. `~/.nats-bootstrap/nats-config.json`
@@ -48,6 +58,7 @@ nats-bootstrap status
 nats-bootstrap doctor
 nats-bootstrap up --cluster demo
 nats-bootstrap join --cluster demo --seed pc-a:6222
+nats-bootstrap up --bootstrap-config bootstrap.yaml
 nats-bootstrap start  # 非推奨（内部で up に委譲）
 ```
 
@@ -71,6 +82,38 @@ nats-bootstrap join --cluster demo --seed pc-a:6222 --datafolder C:\nats\data
 - 手動設定したい場合は `--nats-config` を使います（`--cluster` とは併用不可）
 - `--seed` は `host` だけでもOK（`--cluster-port` 既定 6222 を補完）
 - 追加オプション: `--cluster-port`, `--client-port`, `--http-port`, `--listen`（`host`/`host:port`）
+
+アカウントや advertise も管理したい場合は `bootstrap.yaml` を使います。
+
+```yaml
+cluster: demo
+datafolder: /data/nats
+client_port: 4222
+http_port: 8222
+cluster_port: 6222
+
+system_account:
+  name: SYS
+  user: sys
+  password_env: NATS_SYS_PASSWORD
+
+app_account:
+  name: APP
+  user: app
+  password_env: NATS_APP_PASSWORD
+
+advertise:
+  client: null
+  cluster: null
+```
+
+```powershell
+nats-bootstrap up --bootstrap-config bootstrap.yaml
+nats-bootstrap join --bootstrap-config bootstrap.yaml --seed pc-a:6222
+```
+
+- `password_env` は環境変数名だけを書きます（値は書きません）。
+- `--bootstrap-config` は `--nats-config` や `--cluster` などの手動bootstrapオプションとは併用できません。
 
 ## controller（MVP）
 起動:

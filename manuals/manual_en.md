@@ -10,7 +10,7 @@ This manual walks through **one concrete clustering scenario**, plus **backup** 
 - Same commands on any machine; no per-node steps
 - `doctor` shows the facts fast
 - Windows service support for stable ops
-- **Bootstrap mode** lets you form a cluster without config files
+- **Bootstrap mode** lets you form a cluster from simple flags or `bootstrap.yaml`
 
 ---
 
@@ -38,7 +38,13 @@ uv pip install "nats-bootstrap[server]"
 ## 3. Cluster Example (start 1st node → add others) 🧩
 Scenario: PC-A / PC-B / PC-C
 
-Config files are **auto-generated**. Just pass `--cluster`.
+Config files are **auto-generated**. Use `--cluster` for the quick path, or `bootstrap.yaml` when you also need accounts.
+
+Keep the config types separate:
+- `nats-config.json`: config for `nats-bootstrap` itself, not raw NATS config
+- `bootstrap.yaml`: input used to generate NATS config, not raw NATS config
+- `nats-bootstrap.conf`: generated raw NATS config
+- `--nats-config`: pass your own raw NATS config directly
 
 ### 3.1 Start the first node (no config file) 🚀
 ```powershell
@@ -62,7 +68,38 @@ node3 is the same: point `--seed` at node1.
 Note: if you want to use an existing config file, use `--nats-config` (cannot be combined with `--cluster`).
 Note: extra options are `--cluster-port`, `--client-port`, `--http-port`, `--listen` (`host` or `host:port`).
 
-### 3.3 Check status ✅
+### 3.3 Using bootstrap.yaml
+```yaml
+cluster: demo
+datafolder: /data/nats
+client_port: 4222
+http_port: 8222
+cluster_port: 6222
+
+system_account:
+  name: SYS
+  user: sys
+  password_env: NATS_SYS_PASSWORD
+
+app_account:
+  name: APP
+  user: app
+  password_env: NATS_APP_PASSWORD
+
+advertise:
+  client: null
+  cluster: null
+```
+
+```powershell
+nats-bootstrap up --bootstrap-config bootstrap.yaml
+nats-bootstrap join --bootstrap-config bootstrap.yaml --seed pc-a:6222
+```
+
+- `password_env` stores only the environment variable name, not the password value.
+- `--bootstrap-config` cannot be combined with `--nats-config` or manual bootstrap options such as `--cluster`.
+
+### 3.4 Check status ✅
 ```powershell
 nats-bootstrap status
 nats-bootstrap doctor

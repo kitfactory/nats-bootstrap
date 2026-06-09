@@ -5,6 +5,13 @@
 # future
 
 # archive
+- [x] bootstrap YAML の仕様追記（設定種別、既知キー、account/advertise）
+- [x] `--bootstrap-config` のCLI実装（既存 `--cluster` との排他/生成統合）
+- [x] bootstrap YAML ローダーと検証を追加（PyYAML依存、未知キー拒否）
+- [x] NATS conf 生成に accounts/system_account/client_advertise/cluster.advertise を追加
+- [x] README/マニュアルに bootstrap.yaml と nats-config.json/raw NATS config の違いを追記
+- [x] テスト追加（bootstrap YAML loader/生成/排他）と全体 pytest 実行
+- [x] パッケージバージョンを `0.1.0` に更新
 - [x] bootstrap 追加オプションの仕様追記（--listen/--cluster-port/--client-port/--http-port、seedの既定ポート）
 - [x] 自動設定生成にポート/リッスンの反映を実装
 - [x] README/マニュアルに seedの既定ポートと追加オプションを追記

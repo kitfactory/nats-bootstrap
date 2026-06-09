@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+import re
 import socket
 
 
@@ -21,6 +22,22 @@ class BootstrapConfigError(ValueError):
 class GeneratedConfig:
     path: Path
     data_dir: Path
+
+
+@dataclass(frozen=True)
+class AccountSpec:
+    name: str
+    user: str
+    password_env: str
+
+
+@dataclass(frozen=True)
+class AdvertiseSpec:
+    client: str | None = None
+    cluster: str | None = None
+
+
+_IDENTIFIER_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
 def default_data_dir() -> Path:
@@ -62,6 +79,9 @@ def generate_bootstrap_config(
     http_port: int = DEFAULT_HTTP_PORT,
     cluster_port: int = DEFAULT_CLUSTER_PORT,
     cluster_listen: str | None = None,
+    system_account: AccountSpec | None = None,
+    app_account: AccountSpec | None = None,
+    advertise: AdvertiseSpec | None = None,
 ) -> GeneratedConfig:
     cluster_name = cluster.strip()
     if not cluster_name:
@@ -72,6 +92,7 @@ def generate_bootstrap_config(
 
     data_dir.mkdir(parents=True, exist_ok=True)
     server_name = server_name or socket.gethostname()
+    _validate_account_pair(system_account, app_account)
 
     config_path = config_path_for_data_dir(data_dir)
     text = _build_config_text(
@@ -83,6 +104,9 @@ def generate_bootstrap_config(
         http_port,
         cluster_port,
         cluster_listen,
+        system_account,
+        app_account,
+        advertise,
     )
     config_path.write_text(text, encoding="utf-8")
     return GeneratedConfig(path=config_path, data_dir=data_dir)
@@ -90,6 +114,34 @@ def generate_bootstrap_config(
 
 def _escape(value: str) -> str:
     return value.replace("\\", "\\\\").replace('"', '\\"')
+
+
+def _validate_identifier(value: str, field: str) -> None:
+    if not _IDENTIFIER_RE.match(value):
+        raise BootstrapConfigError(f"{field} must be an identifier")
+
+
+def _validate_account_pair(
+    system_account: AccountSpec | None,
+    app_account: AccountSpec | None,
+) -> None:
+    if (system_account is None) != (app_account is None):
+        raise BootstrapConfigError("system_account and app_account must be set together")
+    if system_account is None or app_account is None:
+        return
+
+    for prefix, account in (("system_account", system_account), ("app_account", app_account)):
+        _validate_identifier(account.name, f"{prefix}.name")
+        _validate_identifier(account.password_env, f"{prefix}.password_env")
+        if not account.user.strip():
+            raise BootstrapConfigError(f"{prefix}.user is required")
+
+    if system_account.name == app_account.name:
+        raise BootstrapConfigError("system_account.name and app_account.name must differ")
+
+
+def _env_ref(name: str) -> str:
+    return f"${name}"
 
 
 def _build_config_text(
@@ -101,6 +153,9 @@ def _build_config_text(
     http_port: int,
     cluster_port: int,
     cluster_listen: str | None,
+    system_account: AccountSpec | None,
+    app_account: AccountSpec | None,
+    advertise: AdvertiseSpec | None,
 ) -> str:
     store_dir = _escape(str(data_dir))
     cluster_name = _escape(cluster)
@@ -112,11 +167,43 @@ def _build_config_text(
         f"port: {client_port}",
         f"http: {http_port}",
         f'jetstream: {{ store_dir: "{store_dir}" }}',
+    ]
+    if advertise and advertise.client:
+        lines.append(f'client_advertise: "{_escape(advertise.client)}"')
+
+    if system_account and app_account:
+        lines += [
+            "",
+            "accounts: {",
+            f"  {system_account.name}: {{",
+            "    users: [",
+            "      {"
+            f'user: "{_escape(system_account.user)}", '
+            f"password: {_env_ref(system_account.password_env)}"
+            "}",
+            "    ]",
+            "  },",
+            f"  {app_account.name}: {{",
+            "    jetstream: enabled",
+            "    users: [",
+            "      {"
+            f'user: "{_escape(app_account.user)}", '
+            f"password: {_env_ref(app_account.password_env)}"
+            "}",
+            "    ]",
+            "  }",
+            "}",
+            f"system_account: {system_account.name}",
+        ]
+
+    lines += [
         "",
         "cluster {",
         f'  name: "{cluster_name}"',
         f'  listen: "{listen_value}"',
     ]
+    if advertise and advertise.cluster:
+        lines.append(f'  advertise: "{_escape(advertise.cluster)}"')
 
     if seed:
         seed_value = _escape(normalize_seed(seed, cluster_port))

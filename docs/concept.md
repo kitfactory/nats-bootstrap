@@ -36,11 +36,12 @@
 | F-4 | controller による leave 代行 | sys.creds配布の禁止 | UC-3 | P1 |
 | F-5 | Windowsサービス運用（固定パス） | venv更新で壊れる | UC-6 | P1 |
 | F-6 | backup/restore（nats CLI） | 復旧手順の属人化 | UC-5 | P2 |
+| F-7 | bootstrap YAML 入力 | CLI引数肥大化/設定差分事故 | UC-1 | P1 |
 
 ## 6. ユースケース（Use Cases）
 | ID | 主体 | 目的 | 前提 | 主フロー（要約） | 成功条件 | 失敗条件 |
 |---|---|---|---|---|---|---|
-| UC-1 | 運用担当 | ノード起動/参加 | 設定ファイルがある | `up`/`join` 実行 | NATSが起動する | バイナリ未解決/設定不備 |
+| UC-1 | 運用担当 | ノード起動/参加 | 設定ファイルまたはbootstrap YAMLがある | `up`/`join` 実行 | NATSが起動する | バイナリ未解決/設定不備 |
 | UC-2 | 運用担当 | ノード停止 | ノードが稼働中 | `down` 実行 | プロセス停止 | PID/サービス不明 |
 | UC-3 | 運用担当 | ノード除名 | controller が稼働 | `leave` → controller 依頼 | peer-remove完了 | controller不達 |
 | UC-4 | 運用担当 | 状況確認 | なし | `status`/`doctor` 実行 | 事実が出る | バイナリ未解決 |
@@ -66,6 +67,7 @@
 |---|---|---|
 | BinaryResolution | path, source, version | F-2/F-3 |
 | BootstrapConfig | nats_server_path | F-2 |
+| BootstrapYamlConfig | cluster, datafolder, account, advertise | F-7 |
 | ControllerRequest | node_id, request_id | F-4 |
 | ServiceInstallSpec | install_dir, service_name | F-5 |
 | BackupSpec | streams, output_dir | F-6 |

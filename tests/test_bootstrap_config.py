@@ -6,6 +6,8 @@ from pathlib import Path
 import pytest
 
 from nats_bootstrap.bootstrap_config import (
+    AccountSpec,
+    AdvertiseSpec,
     BootstrapConfigError,
     DEFAULT_CONFIG_NAME,
     generate_bootstrap_config,
@@ -55,6 +57,39 @@ def test_generate_bootstrap_config_with_ports(tmp_path: Path):
     assert "http: 8333" in text
     assert 'listen: "0.0.0.0:7333"' in text
     assert "nats://pc-a:7333" in text
+
+
+def test_generate_bootstrap_config_with_accounts_and_advertise(tmp_path: Path):
+    result = generate_bootstrap_config(
+        "demo",
+        tmp_path,
+        seed="pc-a",
+        server_name="node-1",
+        system_account=AccountSpec(
+            name="SYS",
+            user="sys",
+            password_env="NATS_SYS_PASSWORD",
+        ),
+        app_account=AccountSpec(
+            name="APP",
+            user="app",
+            password_env="NATS_APP_PASSWORD",
+        ),
+        advertise=AdvertiseSpec(
+            client="nats.example.test:4222",
+            cluster="nats-route.example.test:6222",
+        ),
+    )
+    text = result.path.read_text(encoding="utf-8")
+    assert 'client_advertise: "nats.example.test:4222"' in text
+    assert "accounts: {" in text
+    assert "SYS: {" in text
+    assert '{user: "sys", password: $NATS_SYS_PASSWORD}' in text
+    assert "APP: {" in text
+    assert "jetstream: enabled" in text
+    assert '{user: "app", password: $NATS_APP_PASSWORD}' in text
+    assert "system_account: SYS" in text
+    assert 'advertise: "nats-route.example.test:6222"' in text
 
 
 def test_resolve_cluster_listen():

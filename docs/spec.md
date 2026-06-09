@@ -4,7 +4,19 @@
 - 目的: 対称運用を前提に、nats-server バイナリ解決と status/doctor を最短で提供する。
 - I/F: CLIのみ（ライブラリは内部利用）。
 
-## 設定ファイル（既定）
+## 設定ファイルの種類
+| ファイル/指定 | 誰が読むか | 形式 | 役割 |
+|---|---|---|---|
+| `nats-config.json` / `--config` | `nats-bootstrap` | JSON | `nats-server` バイナリパスなど、ツール自身の設定 |
+| `bootstrap.yaml` / `--bootstrap-config` | `nats-bootstrap` | YAML | クラスタ・アカウント・advertise から NATS 設定を生成するための入力 |
+| `<datafolder>/nats-bootstrap.conf` | `nats-server` | NATS server config | `nats-bootstrap` が生成する NATS の生設定 |
+| `--nats-config <path>` | `nats-server` | NATS server config | 利用者が用意した NATS の生設定をそのまま渡す |
+
+- `nats-config.json` は NATS server の生設定ではない。
+- `bootstrap.yaml` は NATS server の生設定ではない。
+- NATS server の生設定を直接管理したい場合は `--nats-config` を使う。
+
+## nats-bootstrap 設定ファイル（既定）
 - `--config` で指定されたファイルを最優先で使用する。
 - `--config` で指定したファイルが存在しない場合はエラーとする。
 - それ以外は実行ディレクトリの `nats-config.json` を優先する。
@@ -13,8 +25,11 @@
 
 ## bootstrap モード（自動設定生成）
 - `--cluster` 指定時は `nats-server` の設定ファイルを自動生成する。
+- `--bootstrap-config` 指定時は bootstrap YAML を読み込み、`nats-server` の設定ファイルを自動生成する。
 - `--cluster` と `--nats-config` は同時に指定できない。
+- `--bootstrap-config` と `--nats-config`/手動bootstrapオプション（`--cluster`/`--datafolder`/`--listen`/各種ポート）は同時に指定できない。
 - `join` で `--cluster` を使う場合は `--seed` が必須。
+- `join` で `--bootstrap-config` を使う場合も `--seed` が必須。
 - `--datafolder` 未指定時の既定: `./nats-bootstrap-data`
 - 生成される設定ファイルの保存先: `<datafolder>/nats-bootstrap.conf`
 - `jetstream.store_dir` は `<datafolder>` を使用する。
@@ -25,9 +40,40 @@
 - `--client-port` はクライアント接続ポート（既定: 4222）。
 - `--http-port` は監視用 HTTP ポート（既定: 8222）。
 
+### bootstrap YAML
+- `bootstrap.yaml` は `nats-bootstrap` の入力設定であり、NATSの生設定ファイルではない。
+- 既知キーのみ許可し、未知キーはエラーとする。
+- `datafolder` が相対パスの場合は YAML ファイルの所在ディレクトリ基準で解決する。
+- `system_account.password_env` / `app_account.password_env` は環境変数名のみを保持し、生成する NATS 設定では未クォートの `$ENV_NAME` として参照する。
+- `app_account` には `jetstream: enabled` を生成する。`system_account` には JetStream を有効化しない。
+- `advertise.client` が `null` の場合は `client_advertise` を生成しない。
+- `advertise.cluster` が `null` の場合は `cluster.advertise` を生成しない。
+
+```yaml
+cluster: demo
+datafolder: /data/nats
+client_port: 4222
+http_port: 8222
+cluster_port: 6222
+
+system_account:
+  name: SYS
+  user: sys
+  password_env: NATS_SYS_PASSWORD
+
+app_account:
+  name: APP
+  user: app
+  password_env: NATS_APP_PASSWORD
+
+advertise:
+  client: null
+  cluster: null
+```
+
 ## コマンドI/F（MVP）
-- `nats-bootstrap up [--service] [--cluster <name>] [--datafolder <path>] [--listen <host[:port]>] [--cluster-port <port>] [--client-port <port>] [--http-port <port>] [--nats-config <path>] [-- <nats args...>]`
-- `nats-bootstrap join [--seed <seed>] [--cluster <name>] [--datafolder <path>] [--listen <host[:port]>] [--cluster-port <port>] [--client-port <port>] [--http-port <port>] [--nats-config <path>] [-- <nats args...>]`
+- `nats-bootstrap up [--service] [--cluster <name> | --bootstrap-config <path>] [--datafolder <path>] [--listen <host[:port]>] [--cluster-port <port>] [--client-port <port>] [--http-port <port>] [--nats-config <path>] [-- <nats args...>]`
+- `nats-bootstrap join [--seed <seed>] [--cluster <name> | --bootstrap-config <path>] [--datafolder <path>] [--listen <host[:port]>] [--cluster-port <port>] [--client-port <port>] [--http-port <port>] [--nats-config <path>] [-- <nats args...>]`
 - `nats-bootstrap down --confirm`
 - `nats-bootstrap leave --controller <url> [--controller <url> ...] [--request-id <id>] [--server-name <name>] [--nats-url <url>] [--stop-anyway] --confirm`
 - `nats-bootstrap service install`
@@ -172,11 +218,14 @@
 | REQ-0402 | doctor は nats CLI の有無を表示する | UC-4 |
 | REQ-0500 | `--cluster` 指定時は自動設定を生成して起動する | UC-1 |
 | REQ-0501 | `--cluster` と `--nats-config` は同時指定不可 | UC-1 |
-| REQ-0502 | `join` で `--cluster` を使う場合は `--seed` 必須 | UC-1 |
+| REQ-0502 | `join` で bootstrap モードを使う場合は `--seed` 必須 | UC-1 |
 | REQ-0503 | `--datafolder` 未指定時は `./nats-bootstrap-data` を使用する | UC-1 |
 | REQ-0504 | 生成設定の保存先/`jetstream.store_dir` は `<datafolder>` | UC-1 |
 | REQ-0505 | `--seed` の省略時ポートは `--cluster-port` を使う | UC-1 |
 | REQ-0506 | `--listen`/`--cluster-port`/`--client-port`/`--http-port` を設定に反映する | UC-1 |
+| REQ-0507 | `--bootstrap-config` 指定時は bootstrap YAML から設定を生成する | UC-1 |
+| REQ-0508 | bootstrap YAML の account/advertise を生成設定に反映する | UC-1 |
+| REQ-0509 | bootstrap YAML は既知キーのみ受け付ける | UC-1 |
 
 ### [REQ-0001] CLIのコマンド体系を提供する
 Given: `nats-bootstrap --help` が実行された状態
@@ -329,9 +378,9 @@ Given: `up` または `join` が実行される
 When: `--cluster` と `--nats-config` が同時に指定される
 Done: ERR-BOOT-0001 を返す
 
-### [REQ-0502] `join` で `--cluster` を使う場合は `--seed` 必須
+### [REQ-0502] `join` で bootstrap モードを使う場合は `--seed` 必須
 Given: `join` が実行される
-When: `--cluster` が指定され、`--seed` が未指定
+When: `--cluster` または `--bootstrap-config` が指定され、`--seed` が未指定
 Done: ERR-BOOT-0002 を返す
 
 ### [REQ-0503] `--datafolder` 未指定時は `./nats-bootstrap-data` を使用する
@@ -354,6 +403,26 @@ Given: `--cluster` が指定される
 When: 各オプションが指定される
 Done: 生成設定に `cluster.listen` / `port` / `http` を反映する
 
+### [REQ-0507] `--bootstrap-config` 指定時は bootstrap YAML から設定を生成する
+Given: `up` または `join` が実行される
+When: `--bootstrap-config <path>` が指定され、`--nats-config` と手動bootstrapオプションが指定されていない
+Done: YAML の `cluster` / `datafolder` / `client_port` / `http_port` / `cluster_port` を使って設定ファイルを生成し、`-c` で指定して起動する
+#### エラー
+| ERR-ID | 事象 | MSG-ID |
+|---|---|---|
+| ERR-BOOT-0005 | bootstrap YAML が不正 | MSG-BOOT-0005 |
+| ERR-BOOT-0006 | `--bootstrap-config` と排他オプションの同時指定 | MSG-BOOT-0006 |
+
+### [REQ-0508] bootstrap YAML の account/advertise を生成設定に反映する
+Given: `--bootstrap-config` が指定される
+When: bootstrap YAML に `system_account` / `app_account` / `advertise` が定義される
+Done: 生成設定に `accounts` / `system_account` / `client_advertise` / `cluster.advertise` を反映する
+
+### [REQ-0509] bootstrap YAML は既知キーのみ受け付ける
+Given: bootstrap YAML を読み込む
+When: root / `system_account` / `app_account` / `advertise` に未知キーが存在する
+Done: 失敗として ERR-BOOT-0005 を返す
+
 ## MSG-ID 一覧
 | ID | メッセージ | 対応REQ/ERR |
 |---|---|---|
@@ -369,9 +438,11 @@ Done: 生成設定に `cluster.listen` / `port` / `http` を反映する
 | MSG-SVC-0003 | service が見つかりません | ERR-SVC-0003 |
 | MSG-BKP-0001 | nats CLI が見つかりません | ERR-BKP-0001 |
 | MSG-BOOT-0001 | `--cluster` と `--nats-config` は同時に指定できません | ERR-BOOT-0001 |
-| MSG-BOOT-0002 | `join` で `--cluster` を使う場合は `--seed` が必要です | ERR-BOOT-0002 |
+| MSG-BOOT-0002 | `join` で bootstrap モードを使う場合は `--seed` が必要です | ERR-BOOT-0002 |
 | MSG-BOOT-0003 | `--datafolder` はディレクトリを指定してください | ERR-BOOT-0003 |
 | MSG-BOOT-0004 | `--cluster` は空にできません | ERR-BOOT-0004 |
+| MSG-BOOT-0005 | bootstrap config が不正です | ERR-BOOT-0005 |
+| MSG-BOOT-0006 | `--bootstrap-config` と排他オプションは同時に指定できません | ERR-BOOT-0006 |
 
 ## ERR-ID 一覧
 | ID | 種別 | 説明 |
@@ -388,6 +459,8 @@ Done: 生成設定に `cluster.listen` / `port` / `http` を反映する
 | ERR-SVC-0003 | ServiceNotFound | service が見つからない |
 | ERR-BKP-0001 | NatsCliNotFound | nats CLI が見つからない |
 | ERR-BOOT-0001 | InvalidArgs | `--cluster` と `--nats-config` の同時指定 |
-| ERR-BOOT-0002 | SeedRequired | `join` + `--cluster` 時の `--seed` 不足 |
+| ERR-BOOT-0002 | SeedRequired | `join` + bootstrap モード時の `--seed` 不足 |
 | ERR-BOOT-0003 | InvalidDataFolder | `--datafolder` がディレクトリではない |
 | ERR-BOOT-0004 | ClusterRequired | `--cluster` が空 |
+| ERR-BOOT-0005 | InvalidBootstrapConfig | bootstrap YAML の構造/型/既知キー制約が不正 |
+| ERR-BOOT-0006 | InvalidArgs | `--bootstrap-config` と排他オプションの同時指定 |

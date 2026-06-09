@@ -2,7 +2,7 @@
 
 ## 現在地
 - フェーズ: P0（concept/spec/plan整備 + MVP骨組み）
-- 今回スコープ: bootstrap モード（--cluster/--datafolder）とドキュメント/CLI更新
+- 今回スコープ: bootstrap YAML（--bootstrap-config）対応と設定種別の明確化
 - 参照リンク:
   - concept: `docs/concept.md`
   - spec: `docs/spec.md`
@@ -51,3 +51,5 @@
 - 2026-01-30: nats CLI のインストール手順を別文書に分離し参照リンクを追加。
 - 2026-01-30: `nats.exe` はCLIでありサーバーは `nats-server.exe` である旨を追記。
 - 2026-01-30: マニュアルのFAQに `nats.exe` と `nats-server.exe` の違いを追記。
+- 2026-06-09: bootstrap YAML（--bootstrap-config）入力、account/advertise 生成、設定種別の説明を追加。
+- 2026-06-09: パッケージバージョンを `0.1.0` に更新。

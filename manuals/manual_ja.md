@@ -10,7 +10,7 @@ NATSクラスタの構築から、バックアップ、Windowsサービス化ま
 - どの端末でも**同じコマンド**でクラスタ構築OK
 - 困ったら `doctor` で「今の事実」が一発表示
 - Windowsサービス化で、**venv更新でも壊れにくい**
-- **bootstrap モード**で設定ファイルなしでもクラスタ構築が可能
+- **bootstrap モード**で簡易指定または `bootstrap.yaml` からクラスタ構築が可能
 
 ---
 
@@ -38,7 +38,13 @@ uv pip install "nats-bootstrap[server]"
 ## 3. クラスタ構築の例（最初の1台 → 追加）🧩
 例: PC-A / PC-B / PC-C の3台でクラスタ
 
-設定ファイルは **自動生成** できます。`--cluster` を付けるだけでOKです。
+設定ファイルは **自動生成** できます。簡単に始めるなら `--cluster`、アカウント設定まで含めるなら `bootstrap.yaml` を使います。
+
+設定の種類は分けて考えます。
+- `nats-config.json`: `nats-bootstrap` 自身の設定（NATSの生設定ではありません）
+- `bootstrap.yaml`: NATS設定を生成するための入力（NATSの生設定ではありません）
+- `nats-bootstrap.conf`: 生成されたNATSの生設定
+- `--nats-config`: 自分で用意したNATSの生設定をそのまま使う指定
 
 ### 3.1 最初の1台を起動（設定ファイル不要）🚀
 ```powershell
@@ -62,7 +68,38 @@ node3 も同様に、`--seed` を node1 に向ければOKです。
 ※ 既存の設定ファイルを使う場合は `--nats-config` を利用できます（`--cluster` とは併用不可）。
 ※ 追加オプション: `--cluster-port`, `--client-port`, `--http-port`, `--listen`（`host`/`host:port`）
 
-### 3.3 状態確認 ✅
+### 3.3 bootstrap.yaml を使う場合
+```yaml
+cluster: demo
+datafolder: /data/nats
+client_port: 4222
+http_port: 8222
+cluster_port: 6222
+
+system_account:
+  name: SYS
+  user: sys
+  password_env: NATS_SYS_PASSWORD
+
+app_account:
+  name: APP
+  user: app
+  password_env: NATS_APP_PASSWORD
+
+advertise:
+  client: null
+  cluster: null
+```
+
+```powershell
+nats-bootstrap up --bootstrap-config bootstrap.yaml
+nats-bootstrap join --bootstrap-config bootstrap.yaml --seed pc-a:6222
+```
+
+- `password_env` には環境変数名だけを書き、パスワード値は書きません。
+- `--bootstrap-config` は `--nats-config` や `--cluster` などの手動bootstrapオプションとは併用できません。
+
+### 3.4 状態確認 ✅
 ```powershell
 nats-bootstrap status
 nats-bootstrap doctor
